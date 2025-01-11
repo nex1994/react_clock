@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.scss';
+import { Clock } from './Clock';
 
 function getRandomName(): string {
   const value = Date.now().toString().slice(-4);
@@ -10,87 +11,45 @@ function getRandomName(): string {
 type State = {
   hasClock: boolean;
   clockName: string;
-  today: Date;
 };
 
 export class App extends React.Component<{}, State> {
   state = {
     hasClock: true,
     clockName: 'Clock-0',
-    today: new Date(),
   };
 
   timerId: number = 0;
 
-  ticks: number = 0;
-
-  tick = () => {
-    return new Date();
+  handleLeftClick = () => {
+    this.setState({ hasClock: true });
   };
 
-  hideCloack = () => {
-    window.addEventListener('contextmenu', (event: MouseEvent) => {
-      event.preventDefault();
-      this.setState({ hasClock: false });
-    });
+  handleRightClick = (event: MouseEvent) => {
+    event.preventDefault();
+    this.setState({ hasClock: false });
   };
 
-  showCloack = () => {
-    window.addEventListener('click', () => this.setState({ hasClock: true }));
-  };
-
-  componentDidUpdate(
-    _prevProps: Readonly<{}>,
-    prevState: Readonly<State>,
-  ): void {
-    if (prevState.clockName !== this.state.clockName) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `Renamed from ${prevState.clockName} to ${this.state.clockName}`,
-      );
-    }
-  }
-
-  componentDidMount() {
-    this.ticks = window.setInterval(() => {
-      this.setState({ today: this.tick() });
-      if (this.state.hasClock) {
-        // eslint-disable-next-line no-console
-        console.log(this.tick().toUTCString().slice(-12, -4));
-      }
-    }, 1000);
-
+  componentDidMount(): void {
     this.timerId = window.setInterval(() => {
       this.setState({ clockName: getRandomName() });
     }, 3300);
-
-    this.showCloack();
-    this.hideCloack();
+    document.addEventListener('click', this.handleLeftClick);
+    document.addEventListener('contextmenu', this.handleRightClick);
   }
 
-  componentWillUnmount() {
-    window.clearInterval(this.ticks);
+  componentWillUnmount(): void {
     window.clearInterval(this.timerId);
-    window.removeEventListener('click', () => {});
-    window.removeEventListener('contextmenu', () => {});
+    window.removeEventListener('click', this.handleLeftClick);
+    window.removeEventListener('contextmenu', this.handleRightClick);
   }
 
   render() {
     return (
       <>
         <div className="App">
-          <h1>React Clock</h1>
-          {this.state.hasClock && (
-            <div className="Clock" onClick={(this.showCloack, this.hideCloack)}>
-              <strong className="Clock__name">{this.state.clockName}</strong>
-
-              {' time is '}
-
-              <span className="Clock__time">
-                {this.tick().toUTCString().slice(-12, -4)}
-              </span>
-            </div>
-          )}
+          <h1>React clock</h1>
+          {this.state.hasClock && <Clock clockName={this.state.clockName} />}
         </div>
       </>
     );
